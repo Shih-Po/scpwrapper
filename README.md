@@ -9,6 +9,8 @@ sudo apt-get install -y python3-dev
 
 ## Start 
 ```python=
-from .scptool import ssh_execute, scp_put_file
+from scptool import ssh_execute, scp_put_file
+
+ssh_execute('pwd')
 ```
 
