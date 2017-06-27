@@ -15,10 +15,10 @@ def ssh_execute(cmd, host=host):
     
     OUTPUT:
     ================================================================================
-    [INFO]
+    [Info]
     someone@172.0.0.1
 
-    [EXECUTE]
+    [Execute]
     ls -la /home/
 
     [Output]
@@ -27,31 +27,26 @@ def ssh_execute(cmd, host=host):
     drwxr-xr-x 24 root   root   4096 May 17 08:59 ..
     drwxr-xr-x 11 deploy deploy 4096 May 26 13:31 deploy
     """
-    def print_ouput(in_out_err_turple):
-        def to_string(std):
-            return(str(std.read().decode('utf-8').strip()))
-        def have_(std_string):
-            if len(std_string)>0:
-                return std_string
-            else:
-                return None
-        stdin, stdout, stderr = (in_out_err_turple)
-        stdout_string = to_string(stdout)
-        stderr_string = to_string(stderr)
-        if have_(stdout_string):
-            print('[Output]\n{}\n'.format(stdout_string))
-        if have_(stderr_string):
-            print('[Error]\n{}\n'.format(stderr_string))
-    
-    
+    def to_string(std):
+        return str(std.read().decode('utf-8').strip())
+
     with paramiko.SSHClient() as ssh:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host['hostname'], username=host['user'], password=host['pwd'])
-        print('='*80)
-        print('[INFO]\n{}\n'.format(host['user']+'@'+host['hostname']))
-        print('[EXECUTE]\n{}\n'.format(cmd))
-        print_ouput(ssh.exec_command(cmd))
 
+        execute_infos = ['='*80,
+                         '[Info]\n{}\n'.format(host['user']+'@'+host['hostname']),
+                         '[Execute]\n{}\n'.format(cmd)]
+        print('\n'.join(execute_infos))
+
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        stdout = to_string(stdout)
+        stderr = to_string(stderr)
+
+        if len(stdout)>0:
+            print('[Output]\n{}\n'.format(stdout)) 
+        if len(stderr)>0:
+            print('[Error]\n{}\n'.format(stderr))
 
 def scp_put_file(local_path, remote_path, host=host, recursive=False):
     """
@@ -85,7 +80,6 @@ def scp_put_file(local_path, remote_path, host=host, recursive=False):
         print('\n[To]')
         print('{info}:{remote_path}\n'.format(info=host['user']+'@'+host['hostname'],
                                               remote_path=remote_path))
-
     
     with paramiko.SSHClient() as ssh:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
