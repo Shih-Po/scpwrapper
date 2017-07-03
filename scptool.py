@@ -1,7 +1,11 @@
 import os
 import paramiko
 from scp import SCPClient
-from config import host
+
+try:
+    from config import host
+except ModuleNotFoundError:
+    from .config import host
 
 def ssh_execute(cmd, host=host):
     """
