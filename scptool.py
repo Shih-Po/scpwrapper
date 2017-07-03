@@ -44,7 +44,9 @@ def ssh_execute(cmd, host=host):
         stderr = to_string(stderr)
 
         if len(stdout)>0:
-            print('[Output]\n{}\n'.format(stdout)) 
+            print('[Output]\n{}\n'.format(stdout))
+            return stdout
+
         if len(stderr)>0:
             print('[Error]\n{}\n'.format(stderr))
 
@@ -61,15 +63,15 @@ def scp_put_file(local_path, remote_path, host=host, recursive=False):
     
     OUTPUT:
     ================================================================================
-    [Put]
+    [Put] (local_path)
     ./data
 
-    [To]
+    [To] (remote_path)
     someone@172.0.0.1:/home/deploy/
     """
     def print_output():
         print('='*80)
-        print('[Put]')
+        print('[Put] (local_path)')
 
         if isinstance(local_path, list):
             for f in local_path:
@@ -77,7 +79,7 @@ def scp_put_file(local_path, remote_path, host=host, recursive=False):
         else:
             print(local_path)
             
-        print('\n[To]')
+        print('\n[To] (remote_path)')
         print('{info}:{remote_path}\n'.format(info=host['user']+'@'+host['hostname'],
                                               remote_path=remote_path))
     
@@ -89,4 +91,44 @@ def scp_put_file(local_path, remote_path, host=host, recursive=False):
             scp.put(local_path, remote_path, recursive=recursive)
             print_output()
 
+
+def scp_get_file(remote_path, local_path, host=host, recursive=False):
+    """
+    INPUT:
+    remote_path = '/data/'
+    local_path = './'
+    host = {
+        'hostname': '172.0.0.1',  # Ensure host works in ssh
+        'user': 'someone',
+        'pwd': 'secret'
+    }
     
+    OUTPUT:
+    ================================================================================
+    [Get] (remote_path)
+    someone@172.0.0.1:/data/
+
+
+    [To] (local_path)
+    ./
+    """
+    def print_output():
+        print('='*80)
+        print('[Get] (remote_path)')
+        print('{info}:{remote_path}\n'.format(info=host['user']+'@'+host['hostname'],
+                                              remote_path=remote_path))
+        print('\n[To] (local_path)')
+        if isinstance(local_path, list):
+            for f in local_path:
+                print(f)
+        else:
+            print(local_path)
+
+    with paramiko.SSHClient() as ssh:
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host['hostname'], username=host['user'], password=host['pwd'])
+
+        with SCPClient(ssh.get_transport()) as scp:
+            scp.get(remote_path, local_path, recursive=recursive)
+            print_output()
+
