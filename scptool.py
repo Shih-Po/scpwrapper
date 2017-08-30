@@ -7,7 +7,7 @@ try:
 except ModuleNotFoundError:
     from .config import host
 
-def ssh_execute(cmd, host=host):
+def ssh_execute(cmd, host=host, show=True):
     """
     INPUT:
     cmd = 'ls -la /home/deploy/'
@@ -38,23 +38,26 @@ def ssh_execute(cmd, host=host):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host['hostname'], username=host['user'], password=host['pwd'])
 
-        execute_infos = ['='*80,
-                         '[Info]\n{}\n'.format(host['user']+'@'+host['hostname']),
-                         '[Execute]\n{}\n'.format(cmd)]
-        print('\n'.join(execute_infos))
-
         stdin, stdout, stderr = ssh.exec_command(cmd)
         stdout = to_string(stdout)
         stderr = to_string(stderr)
 
-        if len(stdout)>0:
-            print('[Output]\n{}\n'.format(stdout))
-            return stdout
+        if show:
+            execute_infos = ['='*80,
+                             '[Info]\n{}\n'.format(host['user']+'@'+host['hostname']),
+                             '[Execute]\n{}\n'.format(cmd)]
+            print('\n'.join(execute_infos))
 
-        if len(stderr)>0:
-            print('[Error]\n{}\n'.format(stderr))
+            if len(stdout)>0:
+                print('[Output]\n{}\n'.format(stdout))
+                return stdout
+            if len(stderr)>0:
+                print('[Error]\n{}\n'.format(stderr))
+                return stderr
+        else:
+            return stdout if len(stdout)>0 else stderr
 
-def scp_put_file(local_path, remote_path, host=host, recursive=False):
+def scp_put_file(local_path, remote_path, host=host, recursive=False, show=True):
     """
     INPUT:
     local_path = './data'
@@ -93,10 +96,11 @@ def scp_put_file(local_path, remote_path, host=host, recursive=False):
         
         with SCPClient(ssh.get_transport()) as scp:
             scp.put(local_path, remote_path, recursive=recursive)
-            print_output()
+            if show:
+                print_output()
 
 
-def scp_get_file(remote_path, local_path, host=host, recursive=False):
+def scp_get_file(remote_path, local_path, host=host, recursive=False, show=True):
     """
     INPUT:
     remote_path = '/data/'
@@ -134,5 +138,6 @@ def scp_get_file(remote_path, local_path, host=host, recursive=False):
 
         with SCPClient(ssh.get_transport()) as scp:
             scp.get(remote_path, local_path, recursive=recursive)
-            print_output()
+            if show:
+                print_output()
 
