@@ -4,7 +4,7 @@ from scp import SCPClient
 
 try:
     from config import host
-except ModuleNotFoundError:
+except ImportError:
     from .config import host
 
 def ssh_execute(cmd, host=host, show=True):
